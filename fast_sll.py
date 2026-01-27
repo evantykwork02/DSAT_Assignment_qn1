@@ -1,6 +1,5 @@
-# fast_sll.py
-
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Dict, Generic, Iterator, Optional, TypeVar
 
@@ -12,39 +11,38 @@ T = TypeVar("T")
 @dataclass(frozen=True)
 class Position(Generic[T]):
     """
-    A Position is a handle to a node in the list.
-    This is what the assignment refers to as "position i".
+    A Position is a handle (reference) to a specific node in the list.
+    This is NOT an index.
+    Using a Position allows O(1) access (get), insertion, and removal.
     """
     node: Node[T]
 
 
 class FastSLL(Generic[T]):
     """
-    FastSLL implements a singly linked list ADT.
+    Fast singly linked list ADT (Position-based).
 
-    - The actual data is stored in singly linked list nodes.
-    - An auxiliary map (prev) is used to achieve O(1) removal.
+    Requirements satisfied under this interpretation:
+      - get(pos): O(1)   (pos directly references a node)
+      - insert at a location: O(1) (constant pointer rewiring)
+      - remove at a location: O(1) (uses prev-map to find predecessor in O(1))
+
+    Key idea:
+      prev_map[id(node)] = predecessor node (or None if node is head)
+
+    Note:
+      Python dict operations are assumed O(1) average-case (standard coursework assumption).
     """
 
     def __init__(self) -> None:
-        # Pointer to the first node
         self.head: Optional[Node[T]] = None
-
-        # Pointer to the last node (for O(1) append)
         self.tail: Optional[Node[T]] = None
-
-        # Number of elements in the list
+        self.prev: Dict[int, Optional[Node[T]]] = {}  # maps node_id -> predecessor node
         self._size: int = 0
 
-        # Auxiliary structure:
-        # prev[id(node)] = predecessor of node (or None if node is head)
-        # This allows O(1) removal in a singly linked list.
-        self.prev: Dict[int, Optional[Node[T]]] = {}
-
-    # --------------------------------------------------
-    # Basic utility methods
-    # --------------------------------------------------
-
+    # -----------------------------
+    # Basic helpers
+    # -----------------------------
     def __len__(self) -> int:
         return self._size
 
@@ -52,129 +50,152 @@ class FastSLL(Generic[T]):
         return self._size == 0
 
     def first(self) -> Optional[Position[T]]:
-        # Return a Position handle to the head node
         return Position(self.head) if self.head else None
 
-    def next(self, pos: Position[T]) -> Optional[Position[T]]:
-        # Return the Position of the next node after pos
-        nxt = pos.node.next
-        return Position(nxt) if nxt else None
+    def last(self) -> Optional[Position[T]]:
+        return Position(self.tail) if self.tail else None
 
     def iter_values(self) -> Iterator[T]:
-        # Utility iterator for testing / debugging
         cur = self.head
-        while cur:
+        while cur is not None:
             yield cur.data
             cur = cur.next
 
-    # --------------------------------------------------
-    # Required ADT operations
-    # --------------------------------------------------
+    def _validate(self, pos: Position[T]) -> Node[T]:
+        """
+        Ensures the given Position belongs to this list and is not stale.
+        O(1) check using the prev-map.
+        """
+        node = pos.node
+        if id(node) not in self.prev:
+            raise ValueError("Invalid/foreign Position (node not in this list).")
+        return node
 
+    # -----------------------------
+    # Core ADT operations
+    # -----------------------------
     def get(self, pos: Position[T]) -> T:
         """
-        Return the value stored at a given position.
-
-        O(1) because:
-        - Position directly stores a reference to the node
-        - No traversal is required
+        O(1): direct node access via Position handle.
         """
-        return pos.node.data
+        node = self._validate(pos)
+        return node.data
 
     def append(self, value: T) -> Position[T]:
         """
-        Append a new value to the end of the list.
-
-        O(1) because:
-        - The tail pointer gives direct access to the last node
+        Append to tail in O(1).
         """
         new_node = Node(value)
 
         if self.head is None:
-            # List is empty
+            # empty list
             self.head = self.tail = new_node
             self.prev[id(new_node)] = None
         else:
-            # Attach new node after current tail
             assert self.tail is not None
-            self.tail.next = new_node
             self.prev[id(new_node)] = self.tail
+            self.tail.next = new_node
             self.tail = new_node
+
+        self._size += 1
+        return Position(new_node)
+
+    def prepend(self, value: T) -> Position[T]:
+        """
+        Insert at head in O(1).
+        """
+        new_node = Node(value, next=self.head)
+
+        if self.head is None:
+            # empty list
+            self.head = self.tail = new_node
+            self.prev[id(new_node)] = None
+        else:
+            # fix old head's predecessor
+            old_head = self.head
+            self.head = new_node
+            self.prev[id(new_node)] = None
+            self.prev[id(old_head)] = new_node
 
         self._size += 1
         return Position(new_node)
 
     def insert_after(self, pos: Position[T], value: T) -> Position[T]:
         """
-        Insert a new value immediately after the given position.
-
-        O(1) because:
-        - We already have direct access to the node at pos
-        - Only a constant number of pointer updates are performed
+        Insert in O(1) after the given position.
         """
-        cur = pos.node
-        new_node = Node(value)
+        cur = self._validate(pos)
+        new_node = Node(value, next=cur.next)
 
-        # Save the current next node
-        old_next = cur.next
-
-        # Insert new_node after cur
+        # link cur -> new_node -> old_next
         cur.next = new_node
-        new_node.next = old_next
 
-        # Update predecessor map
+        # set predecessor map for new node
         self.prev[id(new_node)] = cur
 
-        if old_next is not None:
-            # old_next's predecessor is now new_node
-            self.prev[id(old_next)] = new_node
+        # if there was a node after cur, its predecessor becomes new_node
+        if new_node.next is not None:
+            self.prev[id(new_node.next)] = new_node
         else:
-            # cur was the tail, so new_node becomes the new tail
+            # inserted at the tail
             self.tail = new_node
+
+        self._size += 1
+        return Position(new_node)
+
+    def insert_before(self, pos: Position[T], value: T) -> Position[T]:
+        """
+        Insert in O(1) before the given position.
+        Uses prev-map to find predecessor immediately.
+        """
+        target = self._validate(pos)
+        pred = self.prev[id(target)]  # O(1)
+
+        # If inserting before head
+        if pred is None:
+            return self.prepend(value)
+
+        # Otherwise splice between pred and target
+        new_node = Node(value, next=target)
+        pred.next = new_node
+
+        # update prev-map
+        self.prev[id(new_node)] = pred
+        self.prev[id(target)] = new_node
 
         self._size += 1
         return Position(new_node)
 
     def remove(self, pos: Position[T]) -> T:
         """
-        Remove the node at the given position and return its value.
-
-        O(1) because:
-        - The predecessor of the node is retrieved directly from the map
-        - No traversal of the list is required
+        Remove node at Position in O(1) using prev-map.
         """
-        target = pos.node
-        target_id = id(target)
-
-        if target_id not in self.prev:
-            raise ValueError("Position does not belong to this list")
-
-        # Retrieve predecessor in O(1)
-        pred = self.prev[target_id]
+        target = self._validate(pos)
+        pred = self.prev[id(target)]  # O(1)
         nxt = target.next
 
-        # Bypass the target node in the singly linked list
         if pred is None:
-            # Removing the head node
+            # removing head
             self.head = nxt
+            if nxt is not None:
+                self.prev[id(nxt)] = None
+            else:
+                # list becomes empty
+                self.tail = None
         else:
+            # bypass target
             pred.next = nxt
+            if nxt is not None:
+                self.prev[id(nxt)] = pred
+            else:
+                # removing tail
+                self.tail = pred
 
-        # Update predecessor map for the next node
-        if nxt is not None:
-            self.prev[id(nxt)] = pred
-        else:
-            # Removing the tail node
-            self.tail = pred
-
-        # Remove target from predecessor map
-        del self.prev[target_id]
+        # remove from prev-map so stale Positions become invalid
+        del self.prev[id(target)]
         self._size -= 1
 
-        # Reset structure if list becomes empty
-        if self._size == 0:
-            self.head = None
-            self.tail = None
-            self.prev.clear()
+        # optional: help debugging (not required)
+        target.next = None
 
         return target.data
