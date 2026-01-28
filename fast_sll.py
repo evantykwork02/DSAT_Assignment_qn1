@@ -199,3 +199,19 @@ class FastSLL(Generic[T]):
         target.next = None
 
         return target.data
+
+    def clear(self) -> None:
+        """Remove all elements from the list in O(1)."""
+        self.head = None
+        self.tail = None
+        self.prev.clear()
+        self._size = 0
+
+    def next(self, pos: Position[T]) -> Optional[Position[T]]:
+        """
+        Return Position after given position, or None if at end.
+        O(1) operation.
+        """
+        node = self._validate(pos)
+        nxt = node.next
+        return Position(nxt) if nxt else None

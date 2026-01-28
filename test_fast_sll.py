@@ -220,6 +220,31 @@ def test_6_stress_random_ops(seed: int = 7, ops: int = 20000) -> None:
     assert list(sll.iter_values()) == ref_vals
     print(" ✔ Stress test passed")
 
+def test_7_clear() -> None:
+    print("\n[TEST 7] clear() operation")
+    sll = FastSLL[int]()
+    for i in range(10):
+        sll.append(i)
+    
+    sll.clear()
+    assert len(sll) == 0
+    assert sll.is_empty()
+    check_invariants(sll)
+    print(" ✔ clear() works")
+
+def test_8_next() -> None:
+    print("\n[TEST 8] next() navigation")
+    sll = FastSLL[int]()
+    
+    p1 = sll.append(10)
+    p2 = sll.append(20)
+    p3 = sll.append(30)
+    
+    assert sll.next(p1) == p2
+    assert sll.next(p2) == p3
+    assert sll.next(p3) is None
+    print(" ✔ next() works")
+
 
 def main() -> None:
     print("========== FastSLL A/A+ Test Suite ==========")
