@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import random
-from typing import List, Optional
 
+from typing import List, Optional
 from fast_sll import FastSLL, Position
 from node import Node
 
-
 def print_list(sll: FastSLL[int]) -> None:
-    print("   Current list:", list(sll.iter_values()))
-
+    print("Current list:", list(sll.value_iterator()))
 
 def check_invariants(sll: FastSLL[int]) -> None:
     """
@@ -52,7 +50,7 @@ def test_1_empty_list() -> None:
     sll = FastSLL[int]()
     assert sll.is_empty()
     assert len(sll) == 0
-    assert list(sll.iter_values()) == []
+    assert list(sll.value_iterator()) == []
     print(" ✔ Empty list basics OK")
     check_invariants(sll)
 
@@ -100,7 +98,7 @@ def test_3_insert_any_location() -> None:
 
     print_list(sll)
 
-    assert list(sll.iter_values()) == [10, 15, 20, 25, 30]
+    assert list(sll.value_iterator()) == [10, 15, 20, 25, 30]
     assert sll.get(p10) == 10
     assert sll.get(p15) == 15
     assert sll.get(p20) == 20
@@ -213,11 +211,11 @@ def test_6_stress_random_ops(seed: int = 7, ops: int = 20000) -> None:
 
         if step % 5000 == 0 and step != 0:
             check_invariants(sll)
-            assert list(sll.iter_values()) == ref_vals
+            assert list(sll.value_iterator()) == ref_vals
             print(f"   ✔ {step} ops OK")
 
     check_invariants(sll)
-    assert list(sll.iter_values()) == ref_vals
+    assert list(sll.value_iterator()) == ref_vals
     print(" ✔ Stress test passed")
 
 def test_7_clear() -> None:
