@@ -3,11 +3,10 @@ from typing import Generic, Optional, TypeVar
 
 T = TypeVar("T")
 
-
 class Node(Generic[T]):
     """
     Singly linked list node.
-    Stores exactly ONE item (data) and a pointer to the next node.
+    Stores one data item and a pointer to the next node.
     """
     __slots__ = ("data", "next")
 
