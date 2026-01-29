@@ -230,7 +230,11 @@ def test_7_clear() -> None:
     assert len(sll) == 0
     assert sll.is_empty()
     check_invariants(sll)
-    print(" ✔ clear() works")
+
+    # Verify list works after clear
+    sll.append(99)
+    assert len(sll) == 1
+    
 
 def test_8_next() -> None:
     print("\n[TEST 8] next() navigation")
@@ -243,7 +247,13 @@ def test_8_next() -> None:
     assert sll.next(p1) == p2
     assert sll.next(p2) == p3
     assert sll.next(p3) is None
-    print(" ✔ next() works")
+    
+    # Test foreign position rejection
+    sll2 = FastSLL[int]()
+    p_other = sll2.append(99)
+    expect_value_error(lambda: sll.next(p_other), "next(foreign)")
+    
+    print(" ✔ next() OK")
 
 
 def main() -> None:
@@ -255,6 +265,8 @@ def main() -> None:
     test_4_remove_head_mid_tail()
     test_5_foreign_positions_rejected()
     test_6_stress_random_ops()
+    test_7_clear()
+    test_8_next()
 
     print("\n✅ ALL TESTS PASSED (edge cases + invariants + stress)")
     print("============================================")

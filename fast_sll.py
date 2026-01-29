@@ -20,29 +20,23 @@ class Position(Generic[T]):
 
 class FastSLL(Generic[T]):
     """
-    Fast singly linked list ADT (Position-based).
-
-    Requirements satisfied under this interpretation:
-      - get(pos): O(1)   (pos directly references a node)
-      - insert at a location: O(1) (constant pointer rewiring)
-      - remove at a location: O(1) (uses prev-map to find predecessor in O(1))
-
-    Key idea:
-      prev_map[id(node)] = predecessor node (or None if node is head)
-
-    Note:
-      Python dict operations are assumed O(1) average-case (standard coursework assumption).
+    Position-based singly linked list with O(1) operations.
+    Uses predecessor map to achieve O(1) removal without doubly linking.
+    prev[id(node)] = node's predecessor (or None if head)
     """
 
     def __init__(self) -> None:
         self.head: Optional[Node[T]] = None
         self.tail: Optional[Node[T]] = None
+
+        # Key innovation: prev maps each node to its predecessor, enabling
+        # O(1) removal and insert_before in a singly linked list
         self.prev: Dict[int, Optional[Node[T]]] = {}  # maps node_id -> predecessor node
         self._size: int = 0
 
-    # -----------------------------
+    
     # Basic helpers
-    # -----------------------------
+    
     def __len__(self) -> int:
         return self._size
 
@@ -62,33 +56,25 @@ class FastSLL(Generic[T]):
             cur = cur.next
 
     def _validate(self, pos: Position[T]) -> Node[T]:
-        """
-        Ensures the given Position belongs to this list and is not stale.
-        O(1) check using the prev-map.
-        """
+        """Validate position belongs to this list. O(1) check."""    
         node = pos.node
         if id(node) not in self.prev:
             raise ValueError("Invalid/foreign Position (node not in this list).")
         return node
 
-    # -----------------------------
+    
     # Core ADT operations
-    # -----------------------------
+    
     def get(self, pos: Position[T]) -> T:
-        """
-        O(1): direct node access via Position handle.
-        """
+        """Return value at position. O(1)."""
         node = self._validate(pos)
         return node.data
 
     def append(self, value: T) -> Position[T]:
-        """
-        Append to tail in O(1).
-        """
+        """Add element to end. O(1)."""
         new_node = Node(value)
 
         if self.head is None:
-            # empty list
             self.head = self.tail = new_node
             self.prev[id(new_node)] = None
         else:
@@ -101,17 +87,13 @@ class FastSLL(Generic[T]):
         return Position(new_node)
 
     def prepend(self, value: T) -> Position[T]:
-        """
-        Insert at head in O(1).
-        """
+        """Add element at beginning. O(1)."""
         new_node = Node(value, next=self.head)
 
         if self.head is None:
-            # empty list
             self.head = self.tail = new_node
             self.prev[id(new_node)] = None
         else:
-            # fix old head's predecessor
             old_head = self.head
             self.head = new_node
             self.prev[id(new_node)] = None
@@ -127,39 +109,29 @@ class FastSLL(Generic[T]):
         cur = self._validate(pos)
         new_node = Node(value, next=cur.next)
 
-        # link cur -> new_node -> old_next
         cur.next = new_node
 
-        # set predecessor map for new node
         self.prev[id(new_node)] = cur
 
-        # if there was a node after cur, its predecessor becomes new_node
         if new_node.next is not None:
             self.prev[id(new_node.next)] = new_node
         else:
-            # inserted at the tail
             self.tail = new_node
 
         self._size += 1
         return Position(new_node)
 
     def insert_before(self, pos: Position[T], value: T) -> Position[T]:
-        """
-        Insert in O(1) before the given position.
-        Uses prev-map to find predecessor immediately.
-        """
+        """Insert before given position. O(1) via predecessor map."""
         target = self._validate(pos)
-        pred = self.prev[id(target)]  # O(1)
+        pred = self.prev[id(target)]  
 
-        # If inserting before head
         if pred is None:
             return self.prepend(value)
 
-        # Otherwise splice between pred and target
         new_node = Node(value, next=target)
         pred.next = new_node
 
-        # update prev-map
         self.prev[id(new_node)] = pred
         self.prev[id(target)] = new_node
 
@@ -167,51 +139,44 @@ class FastSLL(Generic[T]):
         return Position(new_node)
 
     def remove(self, pos: Position[T]) -> T:
-        """
-        Remove node at Position in O(1) using prev-map.
-        """
+        """Remove and return element at position. O(1)."""
         target = self._validate(pos)
-        pred = self.prev[id(target)]  # O(1)
+        pred = self.prev[id(target)]  
         nxt = target.next
 
         if pred is None:
-            # removing head
+            # Removing head
             self.head = nxt
             if nxt is not None:
                 self.prev[id(nxt)] = None
             else:
-                # list becomes empty
                 self.tail = None
         else:
-            # bypass target
+            # Removing from middle or tail
             pred.next = nxt
             if nxt is not None:
                 self.prev[id(nxt)] = pred
             else:
-                # removing tail
                 self.tail = pred
 
-        # remove from prev-map so stale Positions become invalid
-        del self.prev[id(target)]
+        
+        del self.prev[id(target)] # Invalidate position
         self._size -= 1
 
-        # optional: help debugging (not required)
+       
         target.next = None
 
         return target.data
 
     def clear(self) -> None:
-        """Remove all elements from the list in O(1)."""
+        """Remove all elements. O(1)."""
         self.head = None
         self.tail = None
         self.prev.clear()
         self._size = 0
 
     def next(self, pos: Position[T]) -> Optional[Position[T]]:
-        """
-        Return Position after given position, or None if at end.
-        O(1) operation.
-        """
+        """Return next position, or None if at end. O(1)."""
         node = self._validate(pos)
         nxt = node.next
         return Position(nxt) if nxt else None

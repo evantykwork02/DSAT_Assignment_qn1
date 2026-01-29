@@ -14,3 +14,4 @@ class Node(Generic[T]):
     def __init__(self, data: T, next: Optional["Node[T]"] = None) -> None:
         self.data = data
         self.next = next
+
