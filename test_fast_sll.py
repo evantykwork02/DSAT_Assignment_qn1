@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import random
 
 from typing import List, Optional
@@ -42,7 +41,7 @@ def expect_value_error(fn, msg: str) -> None:
         fn()
         raise AssertionError("Expected ValueError but none thrown: " + msg)
     except ValueError:
-        print(" ✔ Correctly raised ValueError:", msg)
+        print("Correctly raised ValueError:", msg)
 
 
 def test_1_empty_list() -> None:
@@ -51,7 +50,7 @@ def test_1_empty_list() -> None:
     assert sll.is_empty()
     assert len(sll) == 0
     assert list(sll.value_iterator()) == []
-    print(" ✔ Empty list basics OK")
+    print("Empty list basics OK")
     check_invariants(sll)
 
     foreign = Position(Node(999))
@@ -70,7 +69,7 @@ def test_2_single_element() -> None:
     print_list(sll)
 
     assert sll.get(p) == 10
-    print(" ✔ get(pos) correct")
+    print("get(pos) correct")
 
     removed = sll.remove(p)
     print(" - remove(pos) =>", removed)
@@ -104,7 +103,7 @@ def test_3_insert_any_location() -> None:
     assert sll.get(p25) == 25
     assert sll.get(p30) == 30
 
-    print(" ✔ All insertion variants correct")
+    print("All insertion variants correct")
     check_invariants(sll)
 
 
@@ -139,7 +138,7 @@ def test_4_remove_head_mid_tail() -> None:
     print_list(sll)
     check_invariants(sll)
 
-    print(" ✔ remove(pos) correct for all locations")
+    print("remove(pos) correct for all locations")
 
 
 def test_5_foreign_positions_rejected() -> None:
@@ -156,7 +155,7 @@ def test_5_foreign_positions_rejected() -> None:
     expect_value_error(lambda: sll.insert_before(foreign, 9), "insert_before(foreign)")
 
     assert sll.get(p1) == 1
-    print(" ✔ list unchanged and still valid")
+    print("list unchanged and still valid")
     check_invariants(sll)
 
 
@@ -215,7 +214,7 @@ def test_6_stress_random_ops(seed: int = 7, ops: int = 20000) -> None:
 
     check_invariants(sll)
     assert list(sll.value_iterator()) == ref_vals
-    print(" ✔ Stress test passed")
+    print("Stress test passed")
 
 def test_7_clear() -> None:
     print("\n[TEST 7] clear() operation")
@@ -249,7 +248,7 @@ def test_8_next() -> None:
     p_other = sll2.append(99)
     expect_value_error(lambda: sll.next(p_other), "next(foreign)")
     
-    print(" ✔ next() OK")
+    print("next() OK")
 
 
 def main() -> None:
