@@ -5,13 +5,10 @@ from typing import Any, List, Tuple
 
 from fast_sll import FastSLL, Position
 
-#This file is meant to be run to prove O(1) for each of the functions
+#This file is meant to be run for the sole purpose of proving O(1) for each of the required operations
 #Can screenshot console results and use it in report
 
-
-# ----------------------------
 # Count dict operations on prev
-# ----------------------------
 class CountingDict(dict):
     """
     Wraps a dict and counts basic dictionary operations.
@@ -54,7 +51,6 @@ def build_list(n: int) -> Tuple[FastSLL[int], List[Position[int]]]:
         pos.append(sll.append(i))
     return sll, pos
 
-
 def fmt_us(x: float) -> str:
     return f"{x:8.3f}"
 
@@ -71,9 +67,7 @@ def main() -> None:
     print(" Position = node reference")
     print("==============================")
 
-    # ----------------------------
     # A) Operation-count evidence
-    # ----------------------------
     print("\n[A] Operation-count evidence (prev dict ops per single call)")
     print("    If O(1), counts should stay constant as n grows.\n")
 
@@ -103,9 +97,7 @@ def main() -> None:
 
         print(f"{n:10d} | {ops_get:8d} | {ops_ins:12d} | {ops_rem:8d}")
 
-    # ----------------------------
     # B) Timing evidence
-    # ----------------------------
     print("\n[B] Timing evidence (average microseconds per operation)")
     print("    If O(1), μs/op should stay roughly flat as n grows.\n")
     print(f"Repetitions: get={reps_get}, insert/remove={reps_upd}\n")
@@ -142,8 +134,7 @@ def main() -> None:
 
         print(f"{n:10d} | {fmt_us(get_us)} | {fmt_us(ins_us)} | {fmt_us(rem_us)}")
 
-    print("\nDone ✅  Screenshot both tables for your report.")
-
+    print("\nDone. Screenshot both tables for report.")
 
 if __name__ == "__main__":
     main()
