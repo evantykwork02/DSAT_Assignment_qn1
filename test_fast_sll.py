@@ -61,7 +61,6 @@ def test_1_empty_list() -> None:
     expect_value_error(lambda: sll.insert_before(foreign, 1), "insert_before(foreign)")
     check_invariants(sll)
 
-
 def test_2_single_element() -> None:
     print("\n[TEST 2] Single element append/get/remove")
     sll = FastSLL[int]()
@@ -232,7 +231,6 @@ def test_7_clear() -> None:
     # Verify list works after clear
     sll.append(99)
     assert len(sll) == 1
-    
 
 def test_8_next() -> None:
     print("\n[TEST 8] next() navigation")
@@ -266,7 +264,7 @@ def main() -> None:
     test_7_clear()
     test_8_next()
 
-    print("\n✅ ALL TESTS PASSED (edge cases + invariants + stress)")
+    print("\n ALL TESTS PASSED (edge cases + invariants + stress)")
     print("============================================")
 
 

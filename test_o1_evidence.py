@@ -103,8 +103,6 @@ def main() -> None:
 
         print(f"{n:10d} | {ops_get:8d} | {ops_ins:12d} | {ops_rem:8d}")
 
-    print("\nTip for report: screenshot this table. Constant counts = strong O(1) evidence.")
-
     # ----------------------------
     # B) Timing evidence
     # ----------------------------
