@@ -25,8 +25,6 @@ class FastSLL(Generic[T]):
         self.head: Optional[Node[T]] = None  #Starts with no first node
         self.tail: Optional[Node[T]] = None  #Starts with no last node
 
-        # Key innovation: prev maps each node to its predecessor, enabling
-        # O(1) removal and insert_before in a singly linked list
         self.prev: Dict[int, Optional[Node[T]]] = {}  # maps node_id -> predecessor node
         self._size: int = 0  #Tracks how many nodes are in the list
     
@@ -158,7 +156,7 @@ class FastSLL(Generic[T]):
             else:
                 self.tail = pred
         
-        del self.prev[id(target)] # Invalidate position
+        del self.prev[id(target)] 
         self._size -= 1
         target.next = None
         return target.data
